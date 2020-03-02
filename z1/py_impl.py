@@ -2,7 +2,7 @@ import sys
 
 from typing import Any, Dict, Generator, List
 
-LASY_TYPE = Dict[str, Dict[str, Dict[str, Dict]]]
+LASY_TYPE = Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]
 
 
 def error() -> None:
@@ -41,7 +41,7 @@ def p_del(lasy: LASY_TYPE, args: List[str]) -> None:
         return
 
     if len(args) == 0:
-        for k in lasy:
+        for k in list(lasy.keys()):
             del lasy[k]
     try:
         if len(args) == 1:
@@ -111,8 +111,8 @@ def p_print(lasy: LASY_TYPE, args: List[str]) -> None:
 
 
 def read_polecenia() -> Generator[List[str], None, None]:
-    for line in sys.stdin.read().splitlines():
-        if line[0] == "#" or not line.strip():
+    for line in sys.stdin.read().split("\n"):
+        if not line.strip() or line.strip()[0] == "#":
             continue
 
         yield [stripped for a in line.split() if (stripped := a.strip())]
