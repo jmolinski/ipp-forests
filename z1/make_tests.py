@@ -7,8 +7,13 @@ from typing import Any, Dict, List
 from py_impl import LASY_TYPE, p_add, p_check, p_del, p_print
 
 
-def mk_identifier() -> str:
-    return "".join([chr(x) for x in random.choices(range(33, 120), k=7)])
+def mk_identifier(max_len: int = 12) -> str:
+    return "".join(
+        [
+            chr(x)
+            for x in random.choices(range(33, 120), k=random.choice(range(4, max_len)))
+        ]
+    )
 
 
 def resize(base: int, mul: float) -> int:
@@ -16,12 +21,16 @@ def resize(base: int, mul: float) -> int:
 
 
 def make_random_spacing(threshold: float = 0.1) -> str:
-    length = random.choice(range(1, 8))
+    length = random.choice(range(1, 8)) if threshold > 0 else 1
     crazy = random.random() < threshold
     if crazy:
+        length = random.choice(range(5, 15))
         characters = "\t \v\f\r"
     else:
-        characters = " \t"
+        if threshold == 0:
+            characters = " "
+        else:
+            characters = " \t"
     return "".join(random.choices(characters, k=length))
 
 
@@ -140,7 +149,7 @@ class SilencePrint:
         sys.stdout = self._original_stdout
 
 
-def generate_tests(test_size: float) -> None:
+def generate_tests(test_size: float, spacing_threshold: float) -> None:
     lasy: LASY_TYPE = {}
 
     with SilencePrint():
@@ -148,11 +157,11 @@ def generate_tests(test_size: float) -> None:
 
     for t in tests:
         print(
-            t.replace(" ", make_random_spacing(threshold=0.75)).replace(
-                "\n", make_random_spacing() + "\n"
+            t.replace(" ", make_random_spacing(threshold=spacing_threshold)).replace(
+                "\n", make_random_spacing(threshold=spacing_threshold) + "\n"
             )
         )
 
 
 if __name__ == "__main__":
-    generate_tests(0.1)
+    generate_tests(0.006, 0.0)

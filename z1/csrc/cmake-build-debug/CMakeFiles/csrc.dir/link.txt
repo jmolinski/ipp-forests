@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/csrc.dir/main.c.o  -o csrc 
