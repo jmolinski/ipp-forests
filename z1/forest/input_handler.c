@@ -13,6 +13,7 @@ void freeCommand(Command *c) {
             for (int i = 0; i < c->size; i++) {
                 free(c->tokens[i]);
             }
+            free(c->tokens);
         }
         free(c);
     }
@@ -143,7 +144,6 @@ Command *tokenizeLine(char *line) {
     }
 
     int termsCount = splitTermsOnDelimiters(line, terms);
-    free(line);
 
     if (termsCount == -1) {
         // too many terms - raise error

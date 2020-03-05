@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 /*
@@ -60,6 +59,9 @@ int main() {
     Command* command;
 
     while((command = getNextCommand()) != NULL) {
+        if (!command -> error) {
+            printf("%s\n", command->tokens[0]);
+        }
         freeCommand(command);
     }
 
