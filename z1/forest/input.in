@@ -1,3 +1,6 @@
-ADD a b c
-CHECK a
-PRINT
+ADD a d
+ADD b e
+ADD a z
+ADD a a
+ADD a b
+PRINT a

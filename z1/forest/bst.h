@@ -15,9 +15,9 @@ struct Node {
 
 void freeTree(Tree);
 Tree bstGet(Tree, char *);
-Tree bstGetOrCreate(Tree, char *);
-Tree bstInsert(Tree, char *);
+Tree bstGetOrCreate(Tree*, char *);
+Tree bstInsert(Tree*, char *);
 Tree bstDelete(Tree, char *);
-Tree bstSortedDisplay(Tree);
+void bstDisplaySorted(Tree, void (*)(char*));
 
 #endif // FOREST_BST_H

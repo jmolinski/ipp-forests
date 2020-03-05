@@ -10,6 +10,7 @@ typedef struct Command_ {
 } Command;
 
 void freeCommand(Command *);
+char* copyString(char*);
 Command *getNextCommand();
 
 #endif // FOREST_INPUT_HANDLER_H

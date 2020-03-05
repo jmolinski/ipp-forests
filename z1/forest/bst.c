@@ -1,7 +1,7 @@
 #include "bst.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "input_handler.h"
 
 void freeNode(Tree node) {
     // this frees the node but does not free its left/right subtrees
@@ -31,7 +31,7 @@ Tree createNode(char *key, Tree left, Tree right) {
         exit(1);
     }
 
-    tree->key = key;
+    tree->key = copyString(key);
     tree->value = NULL;
     tree->left = left;
     tree->right = right;
@@ -53,8 +53,8 @@ Tree bstGet(Tree t, char *key) {
     }
 }
 
-Tree bstGetOrCreate(Tree t, char *key) {
-    Tree node = bstGet(t, key);
+Tree bstGetOrCreate(Tree *t, char *key) {
+    Tree node = bstGet(*t, key);
     if (node == NULL) {
         node = bstInsert(t, key);
     }
@@ -62,26 +62,34 @@ Tree bstGetOrCreate(Tree t, char *key) {
     return node;
 }
 
-Tree bstInsert(Tree t, char *key) {
-    if (t == NULL) {
-        return createNode(key, NULL, NULL);
+Tree bstInsert(Tree *treePtr, char *key) {
+    if (*treePtr == NULL) {
+        *treePtr = createNode(key, NULL, NULL);
+        return *treePtr;
     }
 
-    int cmpResult = BST_COMPARE_KEYS(t->key, key);
+    Tree tree = *treePtr;
+    int cmpResult = BST_COMPARE_KEYS(tree->key, key);
     if (cmpResult == 0) {
-        return t;
+        return tree;
     } else {
-        Tree *branch = cmpResult < 0 ? &(t->left) : &(t->right);
-        if (*branch == NULL) {
-            *branch = createNode(key, NULL, NULL);
-            return *branch;
+        if (cmpResult < 0) {
+            if ((*treePtr)->left == NULL) {
+                (*treePtr)->left = createNode(key, NULL, NULL);
+                return (*treePtr)->left;
+            }
+            return bstInsert(&(*treePtr)->left, key);
+        } else {
+            if ((*treePtr)->right == NULL) {
+                (*treePtr)->right = createNode(key, NULL, NULL);
+                return (*treePtr)->right;
+            }
+            return bstInsert(&(*treePtr)->right, key);
         }
-        return bstInsert(*branch, key);
     }
 }
 
-static Tree minValueNode(Tree tree)
-{
+static Tree minValueNode(Tree tree) {
     Tree current = tree;
     while (current && current->left != NULL)
         current = current->left;
@@ -107,7 +115,7 @@ Tree bstDelete(Tree root, char *key) {
         }
 
         Tree temp = minValueNode(root->right);
-        free(root->key);  // ??
+        free(root->key);       // ??
         freeTree(root->value); // ??
         root->key = temp->key;
         root->value = temp->value;
@@ -123,6 +131,10 @@ Tree bstDelete(Tree root, char *key) {
     return root;
 }
 
-Tree bstSortedDisplay(Tree tree) {
-    return NULL;
+void bstDisplaySorted(Tree tree, void (*printLine)(char*)) {
+    if (tree != NULL) {
+        bstDisplaySorted(tree->right, printLine);
+        printLine(tree->key);
+        bstDisplaySorted(tree->left, printLine);
+    }
 }

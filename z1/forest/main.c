@@ -72,9 +72,11 @@ int main() {
     Tree forests = NULL;
 
     while ((command = getNextCommand()) != NULL) {
-        executeCommandStrategy(command, forests);
+        executeCommandStrategy(command, &forests);
         freeCommand(command);
     }
+
+    freeTree(forests);
 
     return 0;
 }

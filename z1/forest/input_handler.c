@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define WHITE_DELIMITERS "\t\v\f\r "
+#define WHITE_DELIMITERS "\t\v\f\r \n"
 #define MAX_COMMAND_TERMS 5
 
 void freeCommand(Command *c) {
@@ -84,7 +84,7 @@ static bool areAllCharactersLegal(char *s) {
     return true;
 }
 
-char *copyTerm(char *source) {
+char *copyString(char *source) {
     size_t strLen = strlen(source);
     char *copy = malloc(sizeof(char) * (strLen + 1));
     if (copy == NULL) {
@@ -110,7 +110,7 @@ int splitTermsOnDelimiters(char *s, char **terms) {
         if (temp == NULL) {
             break;
         }
-        terms[i] = copyTerm(temp);
+        terms[i] = copyString(temp);
     }
 
     return i;
