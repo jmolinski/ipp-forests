@@ -4,12 +4,12 @@
 #define FOREST_INPUT_HANDLER_H
 
 typedef struct Command_ {
-    char** tokens;
-    size_t size;
+    char **tokens;
+    unsigned size;
     bool error;
 } Command;
 
-void freeCommand(Command*);
+void freeCommand(Command *);
 Command *getNextCommand();
 
-#endif //FOREST_INPUT_HANDLER_H
+#endif // FOREST_INPUT_HANDLER_H

@@ -1,8 +1,9 @@
-#include <string.h>
 #include "input_handler.h"
+#include <ctype.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define WHITE_DELIMITERS "\t\v\f\r "
 #define MAX_COMMAND_TERMS 5
@@ -69,7 +70,7 @@ char *getInputLine() {
 }
 
 static bool isLegalCharacter(unsigned char c) {
-    return (c > 32 || c == ' ' || c == '\t' || c == '\v' || c == '\f' || c == '\r' || c == '\n');
+    return (c > 32 || isspace(c));
 }
 
 static bool areAllCharactersLegal(char *s) {
@@ -92,7 +93,6 @@ char *copyTerm(char *source) {
     strcpy(copy, source);
     return copy;
 }
-
 
 int splitTermsOnDelimiters(char *s, char **terms) {
     char *temp;
@@ -119,7 +119,7 @@ int splitTermsOnDelimiters(char *s, char **terms) {
 Command *createCommand(char **terms, size_t size, bool error) {
     Command *command = malloc(sizeof(Command));
     if (command == NULL) {
-        exit(1);  // exit frees all allocated memory
+        exit(1); // exit frees all allocated memory
     }
     command->tokens = terms;
     command->size = size;
@@ -130,7 +130,6 @@ Command *createCommand(char **terms, size_t size, bool error) {
 static Command *createErrorCommand() {
     return createCommand(NULL, 0, true);
 }
-
 
 Command *tokenizeLine(char *line) {
     line = strip(line);
@@ -156,7 +155,6 @@ Command *tokenizeLine(char *line) {
 
     return createCommand(terms, termsCount, false);
 }
-
 
 Command *getNextCommand() {
     char *line = NULL;
