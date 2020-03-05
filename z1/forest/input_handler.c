@@ -1,0 +1,183 @@
+#include <string.h>
+#include "input_handler.h"
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#define WHITE_DELIMITERS "\t\v\f\r "
+#define MAX_COMMAND_TERMS 5
+
+void freeCommand(Command *c) {
+    if (c != NULL) {
+        if (!c->error) {
+            for (int i = 0; i < c->size; i++) {
+                free(c->tokens[i]);
+            }
+        }
+        free(c);
+    }
+}
+
+char *leftStrip(char *s) {
+    if (s == NULL) {
+        return s;
+    }
+
+    size_t charsToTrim;
+    if ((charsToTrim = strspn(s, WHITE_DELIMITERS)) > 0) {
+        size_t len = strlen(s);
+        if (charsToTrim == len) {
+            s[0] = '\0';
+        } else {
+            memmove(s, s + charsToTrim, len + 1 - charsToTrim);
+        }
+    }
+
+    return s;
+}
+
+char *rightStrip(char *s) {
+    if (s == NULL) {
+        return s;
+    }
+
+    int i = strlen(s) - 1;
+    while (i >= 0 && strchr(WHITE_DELIMITERS, s[i]) != NULL) {
+        s[i] = '\0';
+        i--;
+    }
+    return s;
+}
+
+char *strip(char *s) {
+    return rightStrip(leftStrip(s));
+}
+
+char *getInputLine() {
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t nread;
+
+    nread = getline(&line, &len, stdin);
+    if (nread == -1) {
+        free(line);
+        return NULL;
+    }
+
+    return line;
+}
+
+static bool isLegalCharacter(unsigned char c) {
+    return (c > 32 || c == ' ' || c == '\t' || c == '\v' || c == '\f' || c == '\r' || c == '\n');
+}
+
+static bool areAllCharactersLegal(char *s) {
+    size_t strLength = strlen(s);
+    for (int i = 0; i < strLength; i++) {
+        if (!isLegalCharacter(s[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+char *copyTerm(char *source) {
+    size_t strLen = strlen(source);
+    char *copy = malloc(sizeof(char) * (strLen + 1));
+    if (copy == NULL) {
+        exit(1);
+    }
+    strcpy(copy, source);
+    return copy;
+}
+
+
+int splitTermsOnDelimiters(char *s, char **terms) {
+    char *temp;
+    int i;
+
+    for (i = 0;; i++) {
+        if (i >= MAX_COMMAND_TERMS) {
+            for (int j = 0; j < MAX_COMMAND_TERMS; j++)
+                free(terms[j]);
+            free(terms);
+            return -1;
+        }
+
+        temp = strsep(&s, WHITE_DELIMITERS);
+        if (temp == NULL) {
+            break;
+        }
+        terms[i] = copyTerm(temp);
+    }
+
+    return i;
+}
+
+Command *createCommand(char **terms, size_t size, bool error) {
+    Command *command = malloc(sizeof(Command));
+    if (command == NULL) {
+        exit(1);  // exit frees all allocated memory
+    }
+    command->tokens = terms;
+    command->size = size;
+    command->error = error;
+    return command;
+}
+
+static Command *createErrorCommand() {
+    return createCommand(NULL, 0, true);
+}
+
+
+Command *tokenizeLine(char *line) {
+    line = strip(line);
+    if (line == NULL) {
+        return NULL;
+    }
+
+    char **terms = malloc(MAX_COMMAND_TERMS * sizeof(char *));
+    if (terms == NULL) {
+        exit(1);
+    }
+
+    int termsCount = splitTermsOnDelimiters(line, terms);
+    free(line);
+
+    if (termsCount == -1) {
+        // too many terms - raise error
+        return createErrorCommand();
+    }
+    if (termsCount == 0 || terms[0][0] == '#') {
+        // empty line or starts with #; ignore
+        return NULL;
+    }
+
+    return createCommand(terms, termsCount, false);
+}
+
+
+Command *getNextCommand() {
+    char *line = NULL;
+    Command *command = NULL;
+
+    while (true) {
+        line = getInputLine();
+        if (line == NULL) {
+            return NULL;
+        }
+
+        if (!areAllCharactersLegal(line)) {
+            return createErrorCommand();
+        }
+
+        command = tokenizeLine(line);
+        free(line);
+
+        if (command != NULL) {
+            // command will be NULL if the line was ignored or empty
+            return command;
+        }
+    }
+}

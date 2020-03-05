@@ -1,0 +1,3 @@
+ADD a b c
+CHECK a
+PRINT
