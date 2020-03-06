@@ -1,1 +1,2 @@
 1. formatowanie calosci jest inconsistent
+2. strcmp -- czy zawsze dobra kolejnosc argumentow mam? dlaczego wypisanie posortowane mam w dziwnej kolejnosci wywolan?

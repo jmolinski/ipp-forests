@@ -1,5 +1,6 @@
 #include "commands.h"
 #include "output_interface.h"
+#include "safe_malloc.h"
 #include "string.h"
 #include <stdbool.h>
 #include <stdlib.h>
@@ -92,7 +93,7 @@ void executeCommandCheck(Command *c, Tree bst) {
         return;
     }
 
-    char **argsList = malloc(sizeof(char *) * MAX_COMMAND_ARGUMENTS);
+    char **argsList = safeMalloc(sizeof(char *) * MAX_COMMAND_ARGUMENTS);
     for (int i = 0; i < c->size - 1; i++)
         argsList[i] = c->tokens[i + 1];
 

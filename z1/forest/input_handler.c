@@ -1,4 +1,5 @@
 #include "input_handler.h"
+#include "safe_malloc.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -86,10 +87,7 @@ static bool areAllCharactersLegal(char *s) {
 
 char *copyString(char *source) {
     size_t strLen = strlen(source);
-    char *copy = malloc(sizeof(char) * (strLen + 1));
-    if (copy == NULL) {
-        exit(1);
-    }
+    char *copy = safeMalloc(sizeof(char) * (strLen + 1));
     strcpy(copy, source);
     return copy;
 }
@@ -117,10 +115,7 @@ int splitTermsOnDelimiters(char *s, char **terms) {
 }
 
 Command *createCommand(char **terms, size_t size, bool error) {
-    Command *command = malloc(sizeof(Command));
-    if (command == NULL) {
-        exit(1); // exit frees all allocated memory
-    }
+    Command *command = safeMalloc(sizeof(Command));
     command->tokens = terms;
     command->size = size;
     command->error = error;
@@ -139,11 +134,7 @@ Command *tokenizeLine(char *line) {
 
     line = strip(line);
 
-    char **terms = malloc(MAX_COMMAND_TERMS * sizeof(char *));
-    if (terms == NULL) {
-        exit(1);
-    }
-
+    char **terms = safeMalloc(MAX_COMMAND_TERMS * sizeof(char *));
     int termsCount = splitTermsOnDelimiters(line, terms);
 
     if (termsCount == -1) {

@@ -1,5 +1,6 @@
 #include "bst.h"
 #include "input_handler.h"
+#include "safe_malloc.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -26,16 +27,12 @@ void freeTree(Tree tree) {
 }
 
 Tree createNode(char *key, Tree left, Tree right) {
-    Tree tree = malloc(sizeof(struct Node));
-    if (tree == NULL) {
-        exit(1);
-    }
-
-    tree->key = copyString(key);
-    tree->value = NULL;
-    tree->left = left;
-    tree->right = right;
-    return tree;
+    Tree node = safeMalloc(sizeof(struct Node));
+    node->key = copyString(key);
+    node->value = NULL;
+    node->left = left;
+    node->right = right;
+    return node;
 }
 
 Tree bstGet(Tree t, char *key) {
