@@ -2,34 +2,30 @@
 #include "output_interface.h"
 #include "string.h"
 #include <stdbool.h>
+#include <stdlib.h>
+
+#define MAX_COMMAND_ARGUMENTS 6
 
 static inline bool areStringsEqual(char *s1, char *s2) {
     return strcmp(s1, s2) == 0;
 }
 
-static inline bool validatePrintArguments(Command *c) {
-    return c->size >= 1 && c->size <= 3;
-}
-
 void executeCommandPrint(Command *c, Tree bst) {
-    if (!validatePrintArguments(c)) {
+    if (!(c->size >= 1 && c->size <= 3)) {
         printError();
         return;
     }
 
     unsigned desiredNestLevel = c->size - 1;
-    for (unsigned nestLevel = 0; nestLevel < desiredNestLevel; nestLevel++)
+    for (unsigned nestLevel = 0; nestLevel < desiredNestLevel; nestLevel++) {
         bst = bstGet(bst, c->tokens[nestLevel + 1])->value;
+    }
 
     bstDisplaySorted(bst, printLine);
 }
 
-static inline bool validateAddArguments(Command *c) {
-    return c->size >= 2 && c->size <= 4;
-}
-
 void executeCommandAdd(Command *c, Tree *bst) {
-    if (!validateAddArguments(c)) {
+    if (!(c->size >= 2 && c->size <= 4)) {
         printError();
         return;
     }
@@ -42,15 +38,22 @@ void executeCommandAdd(Command *c, Tree *bst) {
     printOk();
 }
 
-static inline bool validateDelArguments(Command *c) {
-    return c->size >= 2 && c->size <= 4;
-}
-
-void executeCommandDel(Command *c, Tree bst) {
-    if (!validateDelArguments(c)) {
+void executeCommandDel(Command *c, Tree *bst) {
+    if (!(c->size >= 2 && c->size <= 4)) {
         printError();
         return;
     }
+
+    unsigned nestLevel = c->size - 2;
+    for (int i = 0; i < nestLevel; i++) {
+        bst = &(bstGet(*bst, c->tokens[i + 1]))->value;
+    }
+
+    if (bst != NULL) {
+        bstDelete(*bst, c->tokens[c->size - 1]);
+    }
+
+    printOk();
 }
 
 static inline bool validateCheckArguments(Command *c) {
@@ -60,10 +63,44 @@ static inline bool validateCheckArguments(Command *c) {
     return correctArgumentsCount && lastArgumentNotAsterisk;
 }
 
+bool bstForAny(Tree t, bool (*seekItem)(Tree, char **), char **tokensLeft) {
+    return (t != NULL) && (bstForAny(t->left, seekItem, tokensLeft) ||
+                           seekItem(t->value, tokensLeft + 1) ||
+                           bstForAny(t->right, seekItem, tokensLeft));
+}
+
+bool recursiveSeekItem(Tree bst, char **tokensLeft) {
+    if (*tokensLeft == NULL) {
+        return bst != NULL;
+    }
+
+    char *token = *tokensLeft;
+    if (areStringsEqual(token, "*")) {
+        return bstForAny(bst, recursiveSeekItem, tokensLeft);
+    } else {
+        return recursiveSeekItem(bstGet(bst, token), tokensLeft + 1);
+    }
+}
+
 void executeCommandCheck(Command *c, Tree bst) {
     if (!validateCheckArguments(c)) {
         printError();
         return;
+    }
+
+    char **argsList = malloc(sizeof(char *) * MAX_COMMAND_ARGUMENTS);
+    for (int i = 0; i < c->size - 1; i++)
+        argsList[i] = c->tokens[i + 1];
+
+    argsList[c->size - 1] = 0; // iteration guard
+
+    bool resultFound = recursiveSeekItem(bst, argsList);
+    free(argsList);
+
+    if (resultFound) {
+        printYes();
+    } else {
+        printNo();
     }
 }
 
@@ -80,7 +117,7 @@ void executeCommandStrategy(Command *command, Tree *forests) {
     } else if (areStringsEqual(commandName, "ADD")) {
         executeCommandAdd(command, forests);
     } else if (areStringsEqual(commandName, "DEL")) {
-        executeCommandDel(command, *forests);
+        executeCommandDel(command, forests);
     } else if (areStringsEqual(commandName, "CHECK")) {
         executeCommandCheck(command, *forests);
     } else {
