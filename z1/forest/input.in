@@ -4,3 +4,7 @@ ADD a z
 ADD a a
 ADD a b
 PRINT a
+CHECK A
+CHECK a
+CHECK a d
+CHECK a a

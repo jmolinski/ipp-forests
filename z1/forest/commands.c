@@ -64,21 +64,25 @@ static inline bool validateCheckArguments(Command *c) {
 }
 
 bool bstForAny(Tree t, bool (*seekItem)(Tree, char **), char **tokensLeft) {
-    return (t != NULL) && (bstForAny(t->left, seekItem, tokensLeft) ||
-                           seekItem(t->value, tokensLeft + 1) ||
+    return (t != NULL) && (seekItem(t->value, tokensLeft + 1) ||
+                           bstForAny(t->left, seekItem, tokensLeft) ||
                            bstForAny(t->right, seekItem, tokensLeft));
 }
 
 bool recursiveSeekItem(Tree bst, char **tokensLeft) {
     if (*tokensLeft == NULL) {
-        return bst != NULL;
+        return true;
     }
 
     char *token = *tokensLeft;
     if (areStringsEqual(token, "*")) {
         return bstForAny(bst, recursiveSeekItem, tokensLeft);
     } else {
-        return recursiveSeekItem(bstGet(bst, token), tokensLeft + 1);
+        Tree foundNode = bstGet(bst, token);
+        if (foundNode == NULL) {
+            return false;
+        }
+        return recursiveSeekItem(foundNode->value, tokensLeft + 1);
     }
 }
 

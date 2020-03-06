@@ -1,7 +1,7 @@
 #include "bst.h"
+#include "input_handler.h"
 #include <stdlib.h>
 #include <string.h>
-#include "input_handler.h"
 
 void freeNode(Tree node) {
     // this frees the node but does not free its left/right subtrees
@@ -131,7 +131,7 @@ Tree bstDelete(Tree root, char *key) {
     return root;
 }
 
-void bstDisplaySorted(Tree tree, void (*printLine)(char*)) {
+void bstDisplaySorted(Tree tree, void (*printLine)(char *)) {
     if (tree != NULL) {
         bstDisplaySorted(tree->right, printLine);
         printLine(tree->key);
