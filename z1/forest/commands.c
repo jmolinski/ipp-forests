@@ -19,7 +19,11 @@ void executeCommandPrint(Command *c, Tree bst) {
 
     unsigned desiredNestLevel = c->size - 1;
     for (unsigned nestLevel = 0; nestLevel < desiredNestLevel; nestLevel++) {
-        bst = bstGet(bst, c->tokens[nestLevel + 1])->value;
+        bst = bstGet(bst, c->tokens[nestLevel + 1]);
+        if (bst == NULL) {
+            return;
+        }
+        bst = bst->value;
     }
 
     bstDisplaySorted(bst, printLine);
@@ -51,7 +55,7 @@ void executeCommandDel(Command *c, Tree *bst) {
     }
 
     if (bst != NULL) {
-        bstDelete(*bst, c->tokens[c->size - 1]);
+        *bst = bstDelete(*bst, c->tokens[c->size - 1]);
     }
 
     printOk();

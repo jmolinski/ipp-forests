@@ -112,11 +112,11 @@ Tree bstDelete(Tree root, char *key) {
         }
 
         Tree temp = minValueNode(root->right);
-        free(root->key);       // ??
-        freeTree(root->value); // ??
-        root->key = temp->key;
+        free(root->key);
+        freeTree(root->value);
+        root->key = copyString(temp->key);
         root->value = temp->value;
-        // tutaj bedzie memory leak
+        temp->value = NULL; // to prevent freeing this memory on temp's delete
         root->right = bstDelete(root->right, temp->key);
     }
     if (cmpResult < 0) {

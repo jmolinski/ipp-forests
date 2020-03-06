@@ -1,10 +1,13 @@
-ADD a d
-ADD b e
-ADD a z
-ADD a a
-ADD a b
-PRINT a
-CHECK A
-CHECK a
-CHECK a d
-CHECK a a
+ADD X D
+ADD X B
+ADD X C
+ADD X F
+
+DEL X B
+DEL X D
+DEL X A
+
+CHECK X B
+CHECK X D
+CHECK X F
+

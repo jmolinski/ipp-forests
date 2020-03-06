@@ -52,10 +52,6 @@ char *rightStrip(char *s) {
     return s;
 }
 
-char *strip(char *s) {
-    return rightStrip(leftStrip(s));
-}
-
 char *getInputLine() {
     char *line = NULL;
     size_t len = 0;
@@ -94,9 +90,9 @@ char *copyString(char *source) {
 
 int splitTermsOnDelimiters(char *s, char **terms) {
     char *temp;
-    int i;
+    int i = 0;
 
-    for (i = 0;; i++) {
+    while (1) {
         if (i >= MAX_COMMAND_TERMS) {
             for (int j = 0; j < MAX_COMMAND_TERMS; j++)
                 free(terms[j]);
@@ -108,7 +104,10 @@ int splitTermsOnDelimiters(char *s, char **terms) {
         if (temp == NULL) {
             break;
         }
-        terms[i] = copyString(temp);
+        if (strcmp(temp, "") != 0) {
+            terms[i] = copyString(temp);
+            i++;
+        }
     }
 
     return i;
@@ -132,7 +131,7 @@ Command *tokenizeLine(char *line) {
         return NULL;
     }
 
-    line = strip(line);
+    line = rightStrip(leftStrip(line));
 
     char **terms = safeMalloc(MAX_COMMAND_TERMS * sizeof(char *));
     int termsCount = splitTermsOnDelimiters(line, terms);
@@ -143,6 +142,7 @@ Command *tokenizeLine(char *line) {
     }
     if (termsCount == 0) {
         // empty line; ignore
+        free(terms);
         return NULL;
     }
 
