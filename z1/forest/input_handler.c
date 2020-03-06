@@ -127,15 +127,17 @@ Command *createCommand(char **terms, size_t size, bool error) {
     return command;
 }
 
-static Command *createErrorCommand() {
+static inline Command *createErrorCommand() {
     return createCommand(NULL, 0, true);
 }
 
 Command *tokenizeLine(char *line) {
-    line = strip(line);
-    if (line == NULL) {
+    if (line == NULL || line[0] == '\0' || line[0] == '#') {
+        // empty line or starts with #; should be ignored
         return NULL;
     }
+
+    line = strip(line);
 
     char **terms = malloc(MAX_COMMAND_TERMS * sizeof(char *));
     if (terms == NULL) {
@@ -148,8 +150,8 @@ Command *tokenizeLine(char *line) {
         // too many terms - raise error
         return createErrorCommand();
     }
-    if (termsCount == 0 || terms[0][0] == '#') {
-        // empty line or starts with #; ignore
+    if (termsCount == 0) {
+        // empty line; ignore
         return NULL;
     }
 
