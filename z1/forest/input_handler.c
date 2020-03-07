@@ -66,11 +66,14 @@ char *getInputLine() {
     return line;
 }
 
-static bool isLegalCharacter(unsigned char c) {
+/* checks if a character is within ASCII 33-255 or is a whitespace */
+static inline bool isLegalCharacter(unsigned char c) {
     return (c > 32 || isspace(c));
 }
 
-static bool areAllCharactersLegal(char *s) {
+/* checks if the string contains only allowed characters
+ * and ends with a newline character */
+static bool isInputLineValid(char *s) {
     size_t strLength = strlen(s);
     for (int i = 0; i < strLength; i++) {
         if (!isLegalCharacter(s[i])) {
@@ -78,7 +81,7 @@ static bool areAllCharactersLegal(char *s) {
         }
     }
 
-    return true;
+    return s[strLength - 1] == '\n';
 }
 
 char *copyString(char *source) {
@@ -159,7 +162,7 @@ Command *getNextCommand() {
             return NULL;
         }
 
-        if (!areAllCharactersLegal(line)) {
+        if (!isInputLineValid(line)) {
             return createErrorCommand();
         }
 

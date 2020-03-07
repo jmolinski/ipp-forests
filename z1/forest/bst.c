@@ -69,7 +69,7 @@ Tree bstInsert(Tree *treePtr, char *key) {
     int cmpResult = BST_COMPARE_KEYS(tree->key, key);
     if (cmpResult == 0) {
         return tree;
-    } else {
+    } else { // TODO duplicated code
         if (cmpResult < 0) {
             if ((*treePtr)->left == NULL) {
                 (*treePtr)->left = createNode(key, NULL, NULL);
@@ -86,7 +86,7 @@ Tree bstInsert(Tree *treePtr, char *key) {
     }
 }
 
-static Tree minValueNode(Tree tree) {
+static inline Tree minValueNode(Tree tree) {
     Tree current = tree;
     while (current && current->left != NULL)
         current = current->left;
@@ -101,12 +101,8 @@ Tree bstDelete(Tree root, char *key) {
     int cmpResult = BST_COMPARE_KEYS(root->key, key);
 
     if (cmpResult == 0) {
-        if (root->left == NULL) {
-            Tree temp = root->right;
-            freeNode(root);
-            return temp;
-        } else if (root->right == NULL) {
-            Tree temp = root->left;
+        if (root->left == NULL || root->right == NULL) {
+            Tree temp = root->left == NULL ? root->right : root->left;
             freeNode(root);
             return temp;
         }
@@ -114,9 +110,11 @@ Tree bstDelete(Tree root, char *key) {
         Tree temp = minValueNode(root->right);
         free(root->key);
         freeTree(root->value);
-        root->key = copyString(temp->key);
+        root->key = temp->key;
         root->value = temp->value;
-        temp->value = NULL; // to prevent freeing this memory on temp's delete
+        // to prevent freeing this memory on temp's delete
+        temp->key = NULL;
+        temp->value = NULL;
         root->right = bstDelete(root->right, temp->key);
     }
     if (cmpResult < 0) {

@@ -1,0 +1,4 @@
+[submodule "z1/forest/ipp-2020-testy"]
+	path = z1/forest/ipp-2020-testy
+	url = git@github.com:jmolinski/ipp-2020-testy.git
+	branch = master
