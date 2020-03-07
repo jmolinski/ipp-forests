@@ -51,8 +51,6 @@ def p_del(lasy: LASY_TYPE, args: List[str]) -> None:
         if len(args) == 3:
             del lasy[args[0]][args[1]][args[2]]
     except:
-        # powinno cos wypisywac?
-        # error()
         pass
 
     print("OK")
@@ -86,7 +84,7 @@ def p_check(lasy: LASY_TYPE, args: List[str]) -> None:
             error()
             return
     except Exception as e:
-        error()
+        print(to_en[False])
         return
 
 
@@ -103,8 +101,6 @@ def p_print(lasy: LASY_TYPE, args: List[str]) -> None:
             return
     except:
         pass
-        # powinno wypisywac error jak obiekt nie istnieje?
-        # error()
     else:
         for name in sorted(names):
             print(name)
@@ -112,8 +108,15 @@ def p_print(lasy: LASY_TYPE, args: List[str]) -> None:
 
 def read_polecenia() -> Generator[List[str], None, None]:
     for line in sys.stdin.read().split("\n"):
-        if not line.strip() or line.strip()[0] == "#":
+        if not line.strip() or line[0] == "#":
             continue
+
+        for c in line:
+            if c not in ' \t\f\v\r\n' and not (32 < ord(c) < 256):
+                error()
+                return
+
+        # check if '\n' at end
 
         yield [stripped for a in line.split() if (stripped := a.strip())]
 

@@ -7,13 +7,9 @@ from typing import Any, Dict, List
 from py_impl import LASY_TYPE, p_add, p_check, p_del, p_print
 
 
-def mk_identifier(max_len: int = 12) -> str:
-    return "".join(
-        [
-            chr(x)
-            for x in random.choices(range(33, 120), k=random.choice(range(4, max_len)))
-        ]
-    )
+def mk_identifier(max_len: int = 12, exact_length: int = -1) -> str:
+    length = exact_length if exact_length != -1 else random.choice(range(4, max_len))
+    return "".join([chr(x) for x in random.choices(range(33, 120), k=length)])
 
 
 def resize(base: int, mul: float) -> int:
@@ -34,12 +30,13 @@ def make_random_spacing(threshold: float = 0.1) -> str:
     return "".join(random.choices(characters, k=length))
 
 
-def make_add_tests(lasy: LASY_TYPE, test_size: float) -> List[str]:
-    tests = ["ADD"]
-    p_add(lasy, [])
+def make_add_tests(
+    lasy: LASY_TYPE, test_size: float, identifier_generator: Any
+) -> List[str]:
+    tests = []
 
     for _ in range(resize(200, test_size)):
-        identifier = mk_identifier()
+        identifier = identifier_generator()
         tests.append(f"ADD {identifier}")
         p_add(lasy, [identifier])
 
@@ -48,7 +45,7 @@ def make_add_tests(lasy: LASY_TYPE, test_size: float) -> List[str]:
     tests.append(f"PRINT")
 
     for _ in range(resize(800, test_size)):
-        identifier = mk_identifier()
+        identifier = identifier_generator()
         forest = random.choice(forests)
         tests.append(f"ADD {forest} {identifier}")
         p_add(lasy, [forest, identifier])
@@ -60,13 +57,13 @@ def make_add_tests(lasy: LASY_TYPE, test_size: float) -> List[str]:
     forests_trees = [(f, t) for f in forests for t in lasy[f].keys()]
 
     for _ in range(resize(2000, test_size)):
-        identifier = mk_identifier()
+        identifier = identifier_generator()
         (forest, tree) = random.choice(forests_trees)
         tests.append(f"ADD {forest} {tree} {identifier}")
         p_add(lasy, [forest, tree, identifier])
 
     # add an animal to a forest/tree that does not exist
-    f, t, a = mk_identifier(), mk_identifier(), mk_identifier()
+    f, t, a = identifier_generator(), identifier_generator(), identifier_generator()
     tests.append(f"ADD {f} {t} {a}")
     p_add(lasy, [f, t, a])
 
@@ -78,7 +75,9 @@ def make_add_tests(lasy: LASY_TYPE, test_size: float) -> List[str]:
     return tests
 
 
-def make_del_tests(lasy: LASY_TYPE, test_size: float) -> List[str]:
+def make_del_tests(
+    lasy: LASY_TYPE, test_size: float, identifier_generator: Any
+) -> List[str]:
     tests = []
 
     forests = list(lasy.keys())
@@ -149,19 +148,91 @@ class SilencePrint:
         sys.stdout = self._original_stdout
 
 
-def generate_tests(test_size: float, spacing_threshold: float) -> None:
+def generate_tests(
+    test_size: float,
+    spacing_threshold: float,
+    super_long=False,
+    identifier_generator: Any = mk_identifier,
+    spaces_only=False,
+    append_spacing_beginning=False,
+        no_prints=False,
+) -> None:
     lasy: LASY_TYPE = {}
 
     with SilencePrint():
-        tests = make_add_tests(lasy, test_size) + make_del_tests(lasy, test_size)
+        add_tests = make_add_tests(lasy, test_size, identifier_generator)
+        #del_tests = make_del_tests(
+        #    lasy, test_size, identifier_generator
+        #)
+        tests = add_tests
 
     for t in tests:
-        print(
-            t.replace(" ", make_random_spacing(threshold=spacing_threshold)).replace(
-                "\n", make_random_spacing(threshold=spacing_threshold) + "\n"
-            )
-        )
+        if no_prints:
+            if 'PRINT' in t:
+                continue
+
+        random_spacing = make_random_spacing(threshold=spacing_threshold)
+        beginning_spacing = ""
+
+        if super_long:
+            random_spacing = "".join(make_random_spacing(1) for _ in range(10000))
+        if spaces_only:
+            random_spacing = " "
+        if append_spacing_beginning:
+            beginning_spacing = random_spacing
+
+        print(beginning_spacing + t.replace(" ", random_spacing) + random_spacing)
+
+    print('CHECK A B C')
+    print('CHECK * JP2')
+    print('CHECK * * GMD')
+
+    forests = list(lasy.keys())
+    forests_trees = [(f, t) for f in forests for t in lasy[f].keys()]
+    trees_only = [t for (f,t) in forests_trees]
+    animals = [
+        a for (f, t) in forests_trees for a in lasy[f][t].keys()
+    ]
+
+    for _ in range(5):
+        print(f'CHECK * {random.choice(trees_only)}')
+
+    for _ in range(5):
+        print(f'CHECK * * {random.choice(animals)}')
 
 
 if __name__ == "__main__":
-    generate_tests(0.006, 0.0)
+
+    def gen_wrap(gen_to_wrap):
+        gen = gen_to_wrap()
+
+        def wrapped():
+            return next(gen)
+
+        return wrapped
+
+    @gen_wrap
+    def generator_long_names(*args, **kwargs):
+        while True:
+            yield "".join([mk_identifier(exact_length=12) for _ in range(25000)])
+
+    @gen_wrap
+    def generator_short_names(*args, **kwargs):
+        while True:
+            yield mk_identifier(exact_length=10)
+
+    @gen_wrap
+    def generator_colliding_names():
+        while True:
+            yield mk_identifier(exact_length=1)
+
+    @gen_wrap
+    def generator_sorted_names():
+        names = sorted([mk_identifier(exact_length=10) for _ in range(50 * 1000)])
+
+        for n in names:
+            yield n
+
+    generate_tests(
+        100, 0, identifier_generator=generator_short_names, spaces_only=True, no_prints=True
+    )
