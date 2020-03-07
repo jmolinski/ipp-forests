@@ -45,18 +45,24 @@ void executeCommandAdd(Command *c, Tree *bst) {
 }
 
 void executeCommandDel(Command *c, Tree *bst) {
-    if (!(c->size >= 2 && c->size <= 4)) {
+    if (!(c->size >= 1 && c->size <= 4)) {
         printError();
         return;
     }
 
-    unsigned nestLevel = c->size - 2;
-    for (unsigned i = 0; i < nestLevel; i++) {
-        bst = &(bstGet(*bst, c->tokens[i + 1]))->value;
+    if (c->size == 1) {
+        freeTree(*bst);
+        *bst = NULL;
     }
+    else {
+        unsigned nestLevel = c->size - 2;
+        for (unsigned i = 0; i < nestLevel; i++) {
+            bst = &(bstGet(*bst, c->tokens[i + 1]))->value;
+        }
 
-    if (bst != NULL) {
-        *bst = bstDelete(*bst, c->tokens[c->size - 1]);
+        if (bst != NULL) {
+            *bst = bstDelete(*bst, c->tokens[c->size - 1]);
+        }
     }
 
     printOk();
