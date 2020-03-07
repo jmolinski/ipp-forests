@@ -110,11 +110,9 @@ Tree bstDelete(Tree root, char *key) {
         Tree temp = minValueNode(root->right);
         free(root->key);
         freeTree(root->value);
-        root->key = temp->key;
-        root->value = temp->value;
-        // to prevent freeing this memory on temp's delete
-        temp->key = NULL;
-        temp->value = NULL;
+        root->key = copyString(temp->key);
+        root->value = temp->value; // move instead of copying the data
+        temp->value = NULL; // to prevent freeing this memory on temp's delete
         root->right = bstDelete(root->right, temp->key);
     }
     if (cmpResult < 0) {
