@@ -63,7 +63,6 @@ znakiem końca linii (znak \n w C, kod ASCII 10). Jest to jedyny biały znak, ja
 może pojawić się na wyjściu.
  */
 
-#include "bst.h"
 #include "commands.h"
 #include "input_handler.h"
 

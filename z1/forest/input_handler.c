@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "input_handler.h"
 #include "safe_malloc.h"
 #include <ctype.h>
@@ -12,7 +14,7 @@
 void freeCommand(Command *c) {
     if (c != NULL) {
         if (!c->error) {
-            for (int i = 0; i < c->size; i++) {
+            for (unsigned i = 0; i < c->size; i++) {
                 free(c->tokens[i]);
             }
             free(c->tokens);
@@ -55,7 +57,7 @@ char *rightStrip(char *s) {
 char *getInputLine() {
     char *line = NULL;
     size_t len = 0;
-    ssize_t nread;
+    int nread;
 
     nread = getline(&line, &len, stdin);
     if (nread == -1) {
@@ -75,7 +77,7 @@ static inline bool isLegalCharacter(unsigned char c) {
  * and ends with a newline character */
 static bool isInputLineValid(char *s) {
     size_t strLength = strlen(s);
-    for (int i = 0; i < strLength; i++) {
+    for (unsigned i = 0; i < strLength; i++) {
         if (!isLegalCharacter(s[i])) {
             return false;
         }

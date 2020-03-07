@@ -1,10 +1,11 @@
 #include "commands.h"
 #include "output_interface.h"
 #include "safe_malloc.h"
-#include "string.h"
+#include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
+// it's an upper bound, not the supremum
 #define MAX_COMMAND_ARGUMENTS 6
 
 static inline bool areStringsEqual(char *s1, char *s2) {
@@ -36,7 +37,7 @@ void executeCommandAdd(Command *c, Tree *bst) {
     }
 
     unsigned argumentsCount = c->size - 1;
-    for (int i = 1; i <= argumentsCount; i++) {
+    for (unsigned i = 1; i <= argumentsCount; i++) {
         bst = &(bstGetOrCreate(bst, c->tokens[i]))->value;
     }
 
@@ -50,7 +51,7 @@ void executeCommandDel(Command *c, Tree *bst) {
     }
 
     unsigned nestLevel = c->size - 2;
-    for (int i = 0; i < nestLevel; i++) {
+    for (unsigned i = 0; i < nestLevel; i++) {
         bst = &(bstGet(*bst, c->tokens[i + 1]))->value;
     }
 
@@ -98,7 +99,7 @@ void executeCommandCheck(Command *c, Tree bst) {
     }
 
     char **argsList = safeMalloc(sizeof(char *) * MAX_COMMAND_ARGUMENTS);
-    for (int i = 0; i < c->size - 1; i++)
+    for (unsigned i = 0; i < c->size - 1; i++)
         argsList[i] = c->tokens[i + 1];
 
     argsList[c->size - 1] = 0; // iteration guard
