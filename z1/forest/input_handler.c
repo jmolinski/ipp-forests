@@ -9,8 +9,11 @@
 #include <string.h>
 
 #define WHITE_DELIMITERS "\t\v\f\r \n"
+// MAX_COMMAND_TERMS has to be an upper bound for the number of terms in
+// a command, but not necessarily the supremum
 #define MAX_COMMAND_TERMS 5
 
+/* frees Command struct */
 void freeCommand(Command *c) {
     if (c != NULL) {
         if (!c->error) {
@@ -23,6 +26,7 @@ void freeCommand(Command *c) {
     }
 }
 
+/* strips whitespace characters from the left end of a string */
 char *leftStrip(char *s) {
     if (s == NULL) {
         return s;
@@ -41,6 +45,7 @@ char *leftStrip(char *s) {
     return s;
 }
 
+/* strips whitespace characters from the right end of a string */
 char *rightStrip(char *s) {
     if (s == NULL) {
         return s;
@@ -54,13 +59,14 @@ char *rightStrip(char *s) {
     return s;
 }
 
+/* returns a line read from stdin
+ * returns NULL if there are no more characters to read or
+ * if getline fails to allocate memory */
 char *getInputLine() {
     char *line = NULL;
     size_t len = 0;
-    int nread;
 
-    nread = getline(&line, &len, stdin);
-    if (nread == -1) {
+    if (getline(&line, &len, stdin) == -1) {
         free(line);
         return NULL;
     }
@@ -86,6 +92,23 @@ static bool isInputLineValid(char *s) {
     return s[strLength - 1] == '\n';
 }
 
+/* checks if a string starts with a # */
+static inline bool isCommentLine(char const *s) {
+    return (s != NULL) && s[0] == '#';
+}
+
+/* checks if a string contains only whitespace characters */
+static inline bool isAllWhitespace(char const *s) {
+    while(*s != '\0') {
+        if (!isspace(*s)) {
+            return false;
+        }
+        s++;
+    }
+    return true;
+}
+
+/* returns a pointer to a new copy of a string */
 char *copyString(char *source) {
     size_t strLen = strlen(source);
     char *copy = safeMalloc(sizeof(char) * (strLen + 1));
@@ -93,6 +116,11 @@ char *copyString(char *source) {
     return copy;
 }
 
+/* splits a string s on delimiters specified in WHITE_DELIMITERS constant
+ * puts the resulting substrings in terms array
+ * if there are more substrings that MAX_COMMAND_TERMS then
+ * frees terms and returns -1
+ * returns number of elements after split */
 int splitTermsOnDelimiters(char *s, char **terms) {
     char *temp;
     int i = 0;
@@ -118,6 +146,7 @@ int splitTermsOnDelimiters(char *s, char **terms) {
     return i;
 }
 
+/* creates a new struct Command object */
 Command *createCommand(char **terms, size_t size, bool error) {
     Command *command = safeMalloc(sizeof(Command));
     command->tokens = terms;
@@ -126,13 +155,15 @@ Command *createCommand(char **terms, size_t size, bool error) {
     return command;
 }
 
+/* creates new error-flagged Command struct */
 static inline Command *createErrorCommand() {
     return createCommand(NULL, 0, true);
 }
 
+/* creates a Command struct from the passed string
+ * returns NULL if the string doesn't contain any valid terms */
 Command *tokenizeLine(char *line) {
-    if (line == NULL || line[0] == '\0' || line[0] == '#') {
-        // empty line or starts with #; should be ignored
+    if (line == NULL || line[0] == '\0') {
         return NULL;
     }
 
@@ -154,6 +185,9 @@ Command *tokenizeLine(char *line) {
     return createCommand(terms, termsCount, false);
 }
 
+/* returns the next parsed command from stdin
+ * ignores empty and comment lines
+ * returns NULL if there are no more characters left on the stdin */
 Command *getNextCommand() {
     char *line = NULL;
     Command *command = NULL;
@@ -163,8 +197,13 @@ Command *getNextCommand() {
         if (line == NULL) {
             return NULL;
         }
+        if (isCommentLine(line) || isAllWhitespace(line)) {
+            free(line);
+            continue;
+        }
 
         if (!isInputLineValid(line)) {
+            free(line);
             return createErrorCommand();
         }
 
