@@ -1,4 +1,5 @@
 import sys
+import io
 
 from typing import Any, Dict, Generator, List
 
@@ -106,22 +107,24 @@ def p_print(lasy: LASY_TYPE, args: List[str]) -> None:
             print(name)
 
 
-def read_polecenia() -> Generator[List[str], None, None]:
-    for line in sys.stdin.read().split("\n"):
+def read_polecenia(input_reader: io.TextIOWrapper) -> Generator[List[str], None, None]:
+    for line in input_reader.readlines():
         if not line.strip() or line[0] == "#":
             continue
 
         for c in line:
-            if c not in ' \t\f\v\r\n' and not (32 < ord(c) < 256):
+            if c not in " \t\f\v\r\n" and not (32 < ord(c) < 256):
                 error()
                 return
 
-        # check if '\n' at end
+        if line[-1] != "\n":
+            error()
+            return
 
-        yield [stripped for a in line.split() if (stripped := a.strip())]
+        yield [stripped for a in line.strip().split() if (stripped := a.strip())]
 
 
-def main() -> None:
+def main(input_reader: io.TextIOWrapper) -> None:
     lasy: LASY_TYPE = {}
 
     polecenia: Dict[str, Any] = {
@@ -131,7 +134,7 @@ def main() -> None:
         "CHECK": p_check,
     }
 
-    for (polecenie, *args) in read_polecenia():
+    for (polecenie, *args) in read_polecenia(input_reader):
         if polecenie not in polecenia:
             error()
         else:
@@ -139,4 +142,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.stdin.reconfigure(newline="\n", encoding="ascii")
+    main(sys.stdin)

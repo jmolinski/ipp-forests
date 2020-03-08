@@ -155,20 +155,20 @@ def generate_tests(
     identifier_generator: Any = mk_identifier,
     spaces_only=False,
     append_spacing_beginning=False,
-        no_prints=False,
+    no_prints=False,
 ) -> None:
     lasy: LASY_TYPE = {}
 
     with SilencePrint():
         add_tests = make_add_tests(lasy, test_size, identifier_generator)
-        #del_tests = make_del_tests(
+        # del_tests = make_del_tests(
         #    lasy, test_size, identifier_generator
-        #)
+        # )
         tests = add_tests
 
     for t in tests:
         if no_prints:
-            if 'PRINT' in t:
+            if "PRINT" in t:
                 continue
 
         random_spacing = make_random_spacing(threshold=spacing_threshold)
@@ -183,22 +183,20 @@ def generate_tests(
 
         print(beginning_spacing + t.replace(" ", random_spacing) + random_spacing)
 
-    print('CHECK A B C')
-    print('CHECK * JP2')
-    print('CHECK * * GMD')
+    print("CHECK A B C")
+    print("CHECK * JP2")
+    print("CHECK * * GMD")
 
     forests = list(lasy.keys())
     forests_trees = [(f, t) for f in forests for t in lasy[f].keys()]
-    trees_only = [t for (f,t) in forests_trees]
-    animals = [
-        a for (f, t) in forests_trees for a in lasy[f][t].keys()
-    ]
+    trees_only = [t for (f, t) in forests_trees]
+    animals = [a for (f, t) in forests_trees for a in lasy[f][t].keys()]
 
     for _ in range(5):
-        print(f'CHECK * {random.choice(trees_only)}')
+        print(f"CHECK * {random.choice(trees_only)}")
 
     for _ in range(5):
-        print(f'CHECK * * {random.choice(animals)}')
+        print(f"CHECK * * {random.choice(animals)}")
 
 
 if __name__ == "__main__":
@@ -234,5 +232,9 @@ if __name__ == "__main__":
             yield n
 
     generate_tests(
-        100, 0, identifier_generator=generator_short_names, spaces_only=True, no_prints=True
+        100,
+        0,
+        identifier_generator=generator_short_names,
+        spaces_only=True,
+        no_prints=True,
     )
