@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* frees the node but does not free its left/right subtrees */
 void freeNode(Tree node) {
-    // this frees the node but does not free its left/right subtrees
     if (node != NULL) {
         free(node->key);
         freeTree(node->value);
@@ -13,8 +13,8 @@ void freeNode(Tree node) {
     }
 }
 
+/* frees the node and its subtrees recursively */
 void freeTree(Tree tree) {
-    // frees the node and its subtrees
     if (tree != NULL) {
         if (tree->left != NULL) {
             freeTree(tree->left);
@@ -26,6 +26,7 @@ void freeTree(Tree tree) {
     }
 }
 
+/* creates and returns a new Node struct */
 Tree createNode(char *key, Tree left, Tree right) {
     Tree node = safeMalloc(sizeof(struct Node));
     node->key = copyString(key);
@@ -35,6 +36,8 @@ Tree createNode(char *key, Tree left, Tree right) {
     return node;
 }
 
+/* returns Node with the specified key
+ * or NULL if key is not found in the tree */
 Tree bstGet(Tree t, char *key) {
     if (t == NULL) {
         return t;
@@ -50,6 +53,8 @@ Tree bstGet(Tree t, char *key) {
     }
 }
 
+/* returns Node with the specified key
+ * if the Node does not exist yet it will be created and added to the tree */
 Tree bstGetOrCreate(Tree *t, char *key) {
     Tree node = bstGet(*t, key);
     if (node == NULL) {
@@ -59,6 +64,10 @@ Tree bstGetOrCreate(Tree *t, char *key) {
     return node;
 }
 
+/* adds a Node with the specified key to the tree
+ * if a Node with the specified key already exists then no action will
+ * be performed.
+ * returns the Node */
 Tree bstInsert(Tree *treePtr, char *key) {
     if (*treePtr == NULL) {
         *treePtr = createNode(key, NULL, NULL);
@@ -69,23 +78,18 @@ Tree bstInsert(Tree *treePtr, char *key) {
     int cmpResult = BST_COMPARE_KEYS(tree->key, key);
     if (cmpResult == 0) {
         return tree;
-    } else { // TODO duplicated code
-        if (cmpResult < 0) {
-            if ((*treePtr)->left == NULL) {
-                (*treePtr)->left = createNode(key, NULL, NULL);
-                return (*treePtr)->left;
-            }
-            return bstInsert(&(*treePtr)->left, key);
-        } else {
-            if ((*treePtr)->right == NULL) {
-                (*treePtr)->right = createNode(key, NULL, NULL);
-                return (*treePtr)->right;
-            }
-            return bstInsert(&(*treePtr)->right, key);
+    } else {
+        Tree *branch = cmpResult < 0 ? &(*treePtr)->left : &(*treePtr)->right;
+        if (*branch == NULL) {
+            *branch = createNode(key, NULL, NULL);
+            return *branch;
         }
+        return bstInsert(branch, key);
     }
 }
 
+/* returns Node with the minimal key value
+   returns NULL if tree is Null */
 static inline Tree minValueNode(Tree tree) {
     Tree current = tree;
     while (current && current->left != NULL)
@@ -94,6 +98,8 @@ static inline Tree minValueNode(Tree tree) {
     return current;
 }
 
+/* deletes Node with the specified key if it can be found in the tree
+ * returns new tree root */
 Tree bstDelete(Tree root, char *key) {
     if (root == NULL) {
         return root;
@@ -124,6 +130,9 @@ Tree bstDelete(Tree root, char *key) {
     return root;
 }
 
+/* calls printLine on all Node keys in the tree in sorted order
+ * printLine is an argument - pointer to a function taking a string as argument
+ */
 void bstDisplaySorted(Tree tree, void (*printLine)(char *)) {
     if (tree != NULL) {
         bstDisplaySorted(tree->right, printLine);

@@ -32,7 +32,6 @@ for i in $DIRECTORY/*.in ; do
         echo -ne "${RED}Valgrind error, exit code ${VALGRIND_EXIT_CODE}, ${NOCOLOR}"
     fi
 
-    #Output
     if cmp -s "${i%in}"out "$temp_out" ; then
         if cmp -s "${i%in}"err "$temp_err"; then
             echo -e "${GREEN}Prawidlowe wyjscie${NOCOLOR}"
@@ -43,6 +42,3 @@ for i in $DIRECTORY/*.in ; do
         echo -e "${RED}Nieprawidlowe wyjscie na stdout${NOCOLOR}"
     fi
 done
-
-#Cleaning
-rm -f current.err current.out
