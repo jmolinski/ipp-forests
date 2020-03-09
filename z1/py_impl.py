@@ -112,10 +112,9 @@ def read_polecenia(input_reader: io.TextIOWrapper) -> Generator[List[str], None,
         if not line.strip() or line[0] == "#":
             continue
 
-        for c in line:
-            if c not in " \t\f\v\r\n" and not (32 < ord(c) < 256):
-                error()
-                return
+        if any(c not in " \t\f\v\r\n" and not (32 < ord(c) < 256) for c in line):
+            error()
+            continue
 
         if line[-1] != "\n":
             error()
@@ -142,5 +141,5 @@ def main(input_reader: io.TextIOWrapper) -> None:
 
 
 if __name__ == "__main__":
-    sys.stdin.reconfigure(newline="\n", encoding="ascii")
+    sys.stdin.reconfigure(newline="\n", encoding="latin-1")
     main(sys.stdin)
