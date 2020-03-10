@@ -187,7 +187,7 @@ Command *tokenizeLine(char *line) {
 
 /* returns the next parsed command from stdin
  * ignores empty and comment lines
- * returns NULL if there are no more characters left on the stdin */
+ * returns NULL if there are no more characters left on stdin */
 Command *getNextCommand() {
     char *line = NULL;
     Command *command = NULL;
