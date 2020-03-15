@@ -56,8 +56,9 @@ void executeCommandDel(Command *c, Tree *bst) {
     }
     else {
         unsigned nestLevel = c->size - 2;
-        for (unsigned i = 0; i < nestLevel; i++) {
-            bst = &(bstGet(*bst, c->tokens[i + 1]))->value;
+        for (unsigned i = 0; i < nestLevel && bst != NULL;  i++) {
+            Tree node = bstGet(*bst, c->tokens[i + 1]);
+            bst = node == NULL ? NULL : &(node->value);
         }
 
         if (bst != NULL) {
