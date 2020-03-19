@@ -1,6 +1,6 @@
 #define _GNU_SOURCE
 
-#include "input_handler.h"
+#include "input_interface.h"
 #include "safe_malloc.h"
 #include <ctype.h>
 #include <stdbool.h>
@@ -11,7 +11,21 @@
 #define WHITE_DELIMITERS "\t\v\f\r \n"
 // MAX_COMMAND_TERMS has to be an upper bound for the number of terms in
 // a command, but not necessarily the supremum
-#define MAX_COMMAND_TERMS 5
+#define MAX_COMMAND_TERMS 6
+
+/* creates a new struct Command object */
+static inline Command *createCommand(char **terms, size_t size, bool error) {
+    Command *command = safeMalloc(sizeof(Command));
+    command->tokens = terms;
+    command->size = size;
+    command->error = error;
+    return command;
+}
+
+/* creates new error-flagged Command struct */
+static inline Command *createErrorCommand() {
+    return createCommand(NULL, 0, true);
+}
 
 /* frees Command struct */
 void freeCommand(Command *c) {
@@ -27,13 +41,9 @@ void freeCommand(Command *c) {
 }
 
 /* strips whitespace characters from the left end of a string */
-char *leftStrip(char *s) {
-    if (s == NULL) {
-        return s;
-    }
-
-    size_t charsToTrim;
-    if ((charsToTrim = strspn(s, WHITE_DELIMITERS)) > 0) {
+char *leftStrip(char s[static 1]) {
+    size_t charsToTrim = strspn(s, WHITE_DELIMITERS);
+    if (charsToTrim > 0) {
         size_t len = strlen(s);
         if (charsToTrim == len) {
             s[0] = '\0';
@@ -46,11 +56,7 @@ char *leftStrip(char *s) {
 }
 
 /* strips whitespace characters from the right end of a string */
-char *rightStrip(char *s) {
-    if (s == NULL) {
-        return s;
-    }
-
+char *rightStrip(char s[static 1]) {
     int i = strlen(s) - 1;
     while (i >= 0 && strchr(WHITE_DELIMITERS, s[i]) != NULL) {
         s[i] = '\0';
@@ -81,7 +87,7 @@ static inline bool isLegalCharacter(unsigned char c) {
 
 /* checks if the string contains only allowed characters
  * and ends with a newline character */
-static bool isInputLineValid(char *s) {
+static bool isInputLineValid(char s[static 1]) {
     size_t strLength = strlen(s);
     for (unsigned i = 0; i < strLength; i++) {
         if (!isLegalCharacter(s[i])) {
@@ -98,8 +104,8 @@ static inline bool isCommentLine(char const *s) {
 }
 
 /* checks if a string contains only whitespace characters */
-static inline bool isAllWhitespace(char const *s) {
-    while(*s != '\0') {
+static bool isAllWhitespace(char const s[static 1]) {
+    while (*s != '\0') {
         if (!isspace(*s)) {
             return false;
         }
@@ -109,7 +115,7 @@ static inline bool isAllWhitespace(char const *s) {
 }
 
 /* returns a pointer to a new copy of a string */
-char *copyString(char *source) {
+char *copyString(char source[static 1]) {
     size_t strLen = strlen(source);
     char *copy = safeMalloc(sizeof(char) * (strLen + 1));
     strcpy(copy, source);
@@ -121,11 +127,10 @@ char *copyString(char *source) {
  * if there are more substrings that MAX_COMMAND_TERMS then
  * frees terms and returns -1
  * returns number of elements after split */
-int splitTermsOnDelimiters(char *s, char **terms) {
-    char *temp;
+int splitTermsOnDelimiters(char s[static 1],
+                           char *terms[static MAX_COMMAND_TERMS]) {
     int i = 0;
-
-    while (1) {
+    while (true) {
         if (i >= MAX_COMMAND_TERMS) {
             for (int j = 0; j < MAX_COMMAND_TERMS; j++)
                 free(terms[j]);
@@ -133,7 +138,7 @@ int splitTermsOnDelimiters(char *s, char **terms) {
             return -1;
         }
 
-        temp = strsep(&s, WHITE_DELIMITERS);
+        char *temp = strsep(&s, WHITE_DELIMITERS);
         if (temp == NULL) {
             break;
         }
@@ -146,38 +151,18 @@ int splitTermsOnDelimiters(char *s, char **terms) {
     return i;
 }
 
-/* creates a new struct Command object */
-Command *createCommand(char **terms, size_t size, bool error) {
-    Command *command = safeMalloc(sizeof(Command));
-    command->tokens = terms;
-    command->size = size;
-    command->error = error;
-    return command;
-}
-
-/* creates new error-flagged Command struct */
-static inline Command *createErrorCommand() {
-    return createCommand(NULL, 0, true);
-}
-
 /* creates a Command struct from the passed string
  * returns NULL if the string doesn't contain any valid terms */
-Command *tokenizeLine(char *line) {
-    if (line == NULL || line[0] == '\0') {
-        return NULL;
-    }
-
+Command *tokenizeLine(char line[static 1]) {
     line = rightStrip(leftStrip(line));
 
     char **terms = safeMalloc(MAX_COMMAND_TERMS * sizeof(char *));
     int termsCount = splitTermsOnDelimiters(line, terms);
 
-    if (termsCount == -1) {
-        // too many terms - raise error
+    if (termsCount == -1) { // too many terms
         return createErrorCommand();
     }
-    if (termsCount == 0) {
-        // empty line; ignore
+    if (termsCount == 0) { // empty line; ignore
         free(terms);
         return NULL;
     }
@@ -206,7 +191,6 @@ Command *getNextCommand() {
             free(line);
             return createErrorCommand();
         }
-
         command = tokenizeLine(line);
         free(line);
 

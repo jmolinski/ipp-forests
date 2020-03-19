@@ -1,6 +1,5 @@
-#include <stdio.h>
-
 #include "output_interface.h"
+#include <stdio.h>
 
 void printError() {
     fprintf(stderr, "ERROR\n");

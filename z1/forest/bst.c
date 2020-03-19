@@ -1,5 +1,5 @@
 #include "bst.h"
-#include "input_handler.h"
+#include "input_interface.h"
 #include "safe_malloc.h"
 #include <stdlib.h>
 #include <string.h>
@@ -56,12 +56,8 @@ Tree bstGet(Tree t, char *key) {
 /* returns Node with the specified key
  * if the Node does not exist yet it will be created and added to the tree */
 Tree bstGetOrCreate(Tree *t, char *key) {
-    Tree node = bstGet(*t, key);
-    if (node == NULL) {
-        node = bstInsert(t, key);
-    }
-
-    return node;
+    Tree node = t == NULL ? NULL : bstGet(*t, key);
+    return node == NULL ? bstInsert(t, key) : node;
 }
 
 /* adds a Node with the specified key to the tree
@@ -74,10 +70,9 @@ Tree bstInsert(Tree *treePtr, char *key) {
         return *treePtr;
     }
 
-    Tree tree = *treePtr;
-    int cmpResult = BST_COMPARE_KEYS(tree->key, key);
+    int cmpResult = BST_COMPARE_KEYS((*treePtr)->key, key);
     if (cmpResult == 0) {
-        return tree;
+        return *treePtr;
     } else {
         Tree *branch = cmpResult < 0 ? &(*treePtr)->left : &(*treePtr)->right;
         if (*branch == NULL) {
@@ -90,7 +85,7 @@ Tree bstInsert(Tree *treePtr, char *key) {
 
 /* returns Node with the minimal key value
    returns NULL if tree is Null */
-static inline Tree minValueNode(Tree tree) {
+static inline Tree getMinValueNode(Tree tree) {
     Tree current = tree;
     while (current && current->left != NULL)
         current = current->left;
@@ -104,8 +99,8 @@ Tree bstDelete(Tree root, char *key) {
     if (root == NULL) {
         return root;
     }
-    int cmpResult = BST_COMPARE_KEYS(root->key, key);
 
+    int cmpResult = BST_COMPARE_KEYS(root->key, key);
     if (cmpResult == 0) {
         if (root->left == NULL || root->right == NULL) {
             Tree temp = root->left == NULL ? root->right : root->left;
@@ -113,7 +108,7 @@ Tree bstDelete(Tree root, char *key) {
             return temp;
         }
 
-        Tree temp = minValueNode(root->right);
+        Tree temp = getMinValueNode(root->right);
         free(root->key);
         freeTree(root->value);
         root->key = copyString(temp->key);
@@ -133,7 +128,7 @@ Tree bstDelete(Tree root, char *key) {
 /* calls printLine on all Node keys in the tree in sorted order
  * printLine is an argument - pointer to a function taking a string as argument
  */
-void bstDisplaySorted(Tree tree, void (*printLine)(char *)) {
+void bstDisplaySorted(Tree tree, void(printLine)(char *)) {
     if (tree != NULL) {
         bstDisplaySorted(tree->right, printLine);
         printLine(tree->key);

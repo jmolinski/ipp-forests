@@ -1,9 +1,11 @@
-#include "input_handler.h"
-#include "bst.h"
-
 #ifndef FOREST_COMMANDS_H
 #define FOREST_COMMANDS_H
 
-void executeCommandStrategy(Command*, Tree*);
+#include "bst.h"
+#include "input_interface.h"
 
-#endif //FOREST_COMMANDS_H
+/* execute s given command on a tree
+ * command must not be NULL */
+void executeCommandStrategy(Command *, Tree *);
+
+#endif // FOREST_COMMANDS_H

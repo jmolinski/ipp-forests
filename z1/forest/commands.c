@@ -1,9 +1,14 @@
 #include "commands.h"
 #include "output_interface.h"
 #include "safe_malloc.h"
-#include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+
+/*
+ * the specification of supported commands can be found here:
+ * https://moodle.mimuw.edu.pl/mod/assign/view.php?id=21480
+ */
 
 // it's an upper bound, not the supremum
 #define MAX_COMMAND_ARGUMENTS 6
@@ -12,15 +17,15 @@ static inline bool areStringsEqual(char *s1, char *s2) {
     return strcmp(s1, s2) == 0;
 }
 
-void executeCommandPrint(Command *c, Tree bst) {
+static void executeCommandPrint(Command *c, Tree bst) {
     if (!(c->size >= 1 && c->size <= 3)) {
         printError();
         return;
     }
 
     unsigned desiredNestLevel = c->size - 1;
-    for (unsigned nestLevel = 0; nestLevel < desiredNestLevel; nestLevel++) {
-        bst = bstGet(bst, c->tokens[nestLevel + 1]);
+    for (unsigned nestLevel = 1; nestLevel <= desiredNestLevel; nestLevel++) {
+        bst = bstGet(bst, c->tokens[nestLevel]);
         if (bst == NULL) {
             return;
         }
@@ -30,7 +35,7 @@ void executeCommandPrint(Command *c, Tree bst) {
     bstDisplaySorted(bst, printLine);
 }
 
-void executeCommandAdd(Command *c, Tree *bst) {
+static void executeCommandAdd(Command *c, Tree *bst) {
     if (!(c->size >= 2 && c->size <= 4)) {
         printError();
         return;
@@ -44,7 +49,7 @@ void executeCommandAdd(Command *c, Tree *bst) {
     printOk();
 }
 
-void executeCommandDel(Command *c, Tree *bst) {
+static void executeCommandDel(Command *c, Tree *bst) {
     if (!(c->size >= 1 && c->size <= 4)) {
         printError();
         return;
@@ -53,17 +58,18 @@ void executeCommandDel(Command *c, Tree *bst) {
     if (c->size == 1) {
         freeTree(*bst);
         *bst = NULL;
+        printOk();
+        return;
     }
-    else {
-        unsigned nestLevel = c->size - 2;
-        for (unsigned i = 0; i < nestLevel && bst != NULL;  i++) {
-            Tree node = bstGet(*bst, c->tokens[i + 1]);
-            bst = node == NULL ? NULL : &(node->value);
-        }
 
-        if (bst != NULL) {
-            *bst = bstDelete(*bst, c->tokens[c->size - 1]);
-        }
+    unsigned desiredNestLevel = c->size - 2;
+    for (unsigned i = 1; i <= desiredNestLevel && bst != NULL; i++) {
+        Tree node = bstGet(*bst, c->tokens[i]);
+        bst = node == NULL ? NULL : &(node->value);
+    }
+
+    if (bst != NULL) {
+        *bst = bstDelete(*bst, c->tokens[c->size - 1]);
     }
 
     printOk();
@@ -76,30 +82,37 @@ static inline bool validateCheckArguments(Command *c) {
     return correctArgumentsCount && lastArgumentNotAsterisk;
 }
 
-bool bstForAny(Tree t, bool (*seekItem)(Tree, char **), char **tokensLeft) {
-    return (t != NULL) && (seekItem(t->value, tokensLeft + 1) ||
-                           bstForAny(t->left, seekItem, tokensLeft) ||
-                           bstForAny(t->right, seekItem, tokensLeft));
+// declaration first so that the function is visible for mutually-recursive
+// functions
+static bool recursiveSeekItem(Tree, char **);
+
+static bool bstBfsSeekValue(Tree t, char **tokensLeft) {
+    if (t == NULL)
+        return false;
+
+    return (bstBfsSeekValue(t->right, tokensLeft) ||
+            (recursiveSeekItem(t->value, tokensLeft + 1)) ||
+            (bstBfsSeekValue(t->left, tokensLeft)));
 }
 
-bool recursiveSeekItem(Tree bst, char **tokensLeft) {
+static bool recursiveSeekItem(Tree bst, char **tokensLeft) {
     if (*tokensLeft == NULL) {
         return true;
     }
 
     char *token = *tokensLeft;
     if (areStringsEqual(token, "*")) {
-        return bstForAny(bst, recursiveSeekItem, tokensLeft);
-    } else {
-        Tree foundNode = bstGet(bst, token);
-        if (foundNode == NULL) {
-            return false;
-        }
-        return recursiveSeekItem(foundNode->value, tokensLeft + 1);
+        return bstBfsSeekValue(bst, tokensLeft);
     }
+
+    Tree foundNode = bstGet(bst, token);
+    if (foundNode == NULL) {
+        return false;
+    }
+    return recursiveSeekItem(foundNode->value, tokensLeft + 1);
 }
 
-void executeCommandCheck(Command *c, Tree bst) {
+static void executeCommandCheck(Command *c, Tree bst) {
     if (!validateCheckArguments(c)) {
         printError();
         return;
@@ -109,7 +122,7 @@ void executeCommandCheck(Command *c, Tree bst) {
     for (unsigned i = 0; i < c->size - 1; i++)
         argsList[i] = c->tokens[i + 1];
 
-    argsList[c->size - 1] = 0; // iteration guard
+    argsList[c->size - 1] = NULL; // iteration guard
 
     bool resultFound = recursiveSeekItem(bst, argsList);
     free(argsList);
@@ -121,6 +134,7 @@ void executeCommandCheck(Command *c, Tree bst) {
     }
 }
 
+/* execute command - strategy design pattern */
 void executeCommandStrategy(Command *command, Tree *forests) {
     if (command->error) {
         printError();
