@@ -1,0 +1,23 @@
+#all lines should result in an error
+
+ADD
+CHECK
+
+ADD A B C D
+DEL A B C D
+CHECK A B C D
+PRINT A B C D
+PRINT A B C
+
+CHECK *
+CHECK A *
+CHECK A B *
+CHECK A B C *
+
+ # error
+
+AD
+DE
+CHEC
+PRIN
+

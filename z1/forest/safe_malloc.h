@@ -9,7 +9,7 @@
 static inline void *safeMalloc(unsigned size) {
     void *ptr = malloc(size);
     if (ptr == NULL) {
-        exit(1); // the OS will deallocate memory
+        exit(1); // the OS will deallocate memory on process exit
     }
     return ptr;
 }
